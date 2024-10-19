@@ -1,15 +1,18 @@
 ---
 title: "Lab 4: Childcare Costs in California"
-author: "Your name here!"
+author: "Ella Leback!"
 format: html
 editor: source
 embed-resources: true
+message: false
+code-tools: true
+code-fold: true
+toc: true
 ---
 
 ## The Data
 
-In this lab we're going look at the median weekly cost of childcare in
-California. A detailed description of the data can be found [here](https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-05-09/readme.md).
+In this lab we're going look at the median weekly cost of childcare in California. A detailed description of the data can be found [here](https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-05-09/readme.md).
 
 The data come to us from [TidyTuesday](https://github.com/rfordatascience/tidytuesday).
 
@@ -18,51 +21,91 @@ The data come to us from [TidyTuesday](https://github.com/rfordatascience/tidytu
 ```{r}
 #| label: setup
 
+library(readr)
+library(dplyr)
+library(forcats)
 ```
 
 ```{r}
 #| label: load-data
+#| message: false
 
 childcare_costs <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/childcare_costs.csv')
 
 counties <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/counties.csv')
+
+glimpse(childcare_costs)
+glimpse(counties) #ran glimpse twice to more easily distinguish dataset vars
 ```
 
-**1. Briefly describe the dataset (~ 4 sentences). What information does it contain?**
+**1. Briefly describe the dataset (\~ 4 sentences). What information does it contain?**
+
+The childcare costs dataset contains many variables that provides a comprehensive look at childcare costs by county through a federal source. The data was collected from 2008 - 2018 and considers childcare price based on their care provider type, children's ages, and characteristics of the county. Each row represents a unique county. The counties dataset includes postal codes, names, and state info for all counties in the United States included in the dataset.
 
 ## California Childcare Costs
 
-Let's start by focusing only on California. 
+Let's start by focusing only on California.
 
-**2. Create a `ca_childcare` dataset of childcare costs in California, containing (1) county information and (2) all information from the `childcare_costs` dataset.** 
-*Hint: There are 58 counties in CA and 11 years in the dataset. Therefore, your new dataset should have 53 x 11 = 638 observations.*
+**2. Create a `ca_childcare` dataset of childcare costs in California, containing (1) county information and (2) all information from the `childcare_costs` dataset.** *Hint: There are 58 counties in CA and 11 years in the dataset. Therefore, your new dataset should have 53 x 11 = 638 observations.*
 
 ```{r}
 #| label: ca-childcare-costs
 
+ca_childcare <- childcare_costs |>
+  inner_join(counties, by = join_by(county_fips_code)) |>
+  filter(state_abbreviation == "CA")
+
+glimpse(ca_childcare)
 ```
 
-**3. Using a function from the `forcats` package, complete the code below to create a new variable where each county is categorized into one of the [10 Census regions](https://census.ca.gov/regions/) in California. Use the Region description (from the plot), not the Region number.**  
+**3. Using a function from the `forcats` package, complete the code below to create a new variable where each county is categorized into one of the [10 Census regions](https://census.ca.gov/regions/) in California. Use the Region description (from the plot), not the Region number.**\
 *Hint: This is probably a good place to use ChatGPT to reduce on tedious work. But you do need to know how to prompt ChatGPT to make it useful!*
 
 ```{r}
 #| label: recoding-county-to-census-regions
+#| warning: false
 
-ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, " County")) |>
-  ...
+ca_counties <- counties |>
+  mutate(region = 
+           fct_collapse(county_name,
+                 "Superior California" = c("Butte", "Colusa", "Del Norte", 
+                                           "Glenn","Humboldt", "Lassen", "Modoc",
+                                           "Plumas", "Shasta", "Sierra", "Siskiyou",
+                                           "Tehama", "Trinity"), 
+                 "San Francisco Bay Area" = c("Alameda", "Contra Costa", "Marin",
+                                              "Napa", "San Francisco", "San Mateo",
+                                              "Santa Clara", "Solano", "Sonoma"),
+                 "Northern San Joaquin Valley" = c("San Joaquin", "Stanislaus",
+                                                   "Merced"),
+                 "Sacramento Area" = c("El Dorado", "Placer", "Sacramento", "Sutter",
+                                       "Yolo", "Yuba"),
+                 "Central Coast" = c("Monterey", "San Benito", "San Luis Obispo",
+                                     "Santa Barbara", "Santa Cruz", "Ventura"),
+                 "Northern California & Central Sierra" = c("Alpine", "Amador",
+                                                            "Calaveras", "Inyo",
+                                                            "Mariposa", "Mono",
+                                                            "Nevada", "Tuolumne"),
+                 "Southern California" = c("Los Angeles", "Orange", "Riverside", 
+                                           "San Bernardino", "San Diego", "Imperial"),
+                 "Central Valley" = c("Fresno", "Kern", "Kings", "Madera", "Tulare"),
+                 "Inland Empire" = c("Riverside", "San Bernardino"),
+                 "San Diego Area" = c("San Diego", "Imperial")
+  ))
+
 ```
-
 
 **4. Let's consider the median household income of each region, and how that income has changed over time. Create a table with ten rows, one for each region, and two columns, one for 2008 and one for 2018. The cells should contain the `median` of the median household income (expressed in 2018 dollars) of the `region` and the `study_year`. Arrange the rows by 2018 values.**
 
 ```{r}
 #| label: median-income-by-region-over-time
 
+ca_childcare |>
+  
+
+
 ```
 
-
-**5. Which California `region` had the lowest `median` full-time median weekly price for center-based childcare for infants in 2018? Does this `region` correspond to the `region` with the lowest `median` income in 2018 that you found in Q4?**  
+**5. Which California `region` had the lowest `median` full-time median weekly price for center-based childcare for infants in 2018? Does this `region` correspond to the `region` with the lowest `median` income in 2018 that you found in Q4?**\
 *Hint: The code should give me the EXACT answer. This means having the code output the exact row(s) and variable(s) necessary for providing the solution.*
 
 ```{r}
@@ -78,7 +121,6 @@ ca_childcare <- ca_childcare |>
 #| label: recreate-plot
 
 ```
-
 
 ## Median Household Income vs. Childcare Costs for Infants
 
@@ -97,6 +139,6 @@ reg_mod1 <- lm()
 summary(reg_mod1)
 ```
 
-**9. Using the output from `summary()`, write out the estimated regression line (recall: $y = mx + b$).**
+**9. Using the output from `summary()`, write out the estimated regression line (recall:** $y = mx + b$).
 
 **10. Do you have evidence to conclude there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California? Cite values from your `summary()` output to support your claim!**
